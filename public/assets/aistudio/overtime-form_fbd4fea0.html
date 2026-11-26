@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>โปรแกรมทำเอกสารขอล่วงเวลา</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --pea:#5b2a86;
+    --pea-dark:#3d1b5c;
+    --pea-light:#f2ecf9;
+    --accent:#e8a33d;
+    --ink:#242030;
+    --paper:#ffffff;
+    --line:#dcd3ea;
+    --muted:#7a7189;
+    --good:#2f8a5b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Sarabun','Noto Sans Thai','TH Sarabun New',system-ui,sans-serif;
+    background:linear-gradient(180deg,var(--pea-light) 0%, #fbfaf6 320px);
+    color:var(--ink);
+    font-size:16px;
+  }
+  header.top{
+    background:var(--pea);
+    color:#fff;
+    padding:22px 28px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+  }
+  header.top .bolt{
+    width:40px;height:40px;flex:none;
+    background:var(--accent);
+    border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;color:var(--pea-dark);font-size:24px;
+  }
+  header.top h1{font-size:23px;margin:0;font-weight:700;letter-spacing:.2px;}
+  header.top p{margin:3px 0 0;font-size:15.5px;color:#e4d9f5;}
+
+  .wrap{max-width:1240px;margin:0 auto;padding:22px 20px 60px;}
+  .layout{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  @media (max-width:980px){.layout{grid-template-columns:1fr;}}
+
+  .card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:18px 20px 22px;
+    margin-bottom:18px;
+    box-shadow:0 1px 2px rgba(60,30,90,.04);
+  }
+  .card h2{
+    font-size:17px;
+    margin:0 0 16px;
+    color:var(--pea-dark);
+    display:flex;align-items:center;gap:8px;
+    text-transform:uppercase;letter-spacing:.4px;
+  }
+  .card h2 .n{
+    width:22px;height:22px;border-radius:50%;
+    background:var(--pea-light);color:var(--pea);
+    font-size:14px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+    text-transform:none;letter-spacing:0;
+  }
+
+  label{display:block;font-size:14.5px;color:var(--muted);margin:0 0 5px;}
+  input,select,textarea{
+    width:100%;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-family:inherit;
+    font-size:16.5px;
+    background:#fff;
+    color:var(--ink);
+  }
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--pea);outline-offset:1px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 12px;}
+  .field{margin-bottom:10px;}
+  .row-items{border:1px dashed var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:#fbfaff;}
+  .row-items .grid2{grid-template-columns:2fr 1fr;}
+
+  table.workers{width:100%;border-collapse:collapse;font-size:15.5px;}
+  table.workers th{
+    background:var(--pea-light);color:var(--pea-dark);
+    font-weight:600;padding:8px 6px;text-align:left;font-size:13.5px;
+    border-bottom:1px solid var(--line);
+  }
+  table.workers td{padding:5px 4px;border-bottom:1px solid #eee;vertical-align:top;}
+  table.workers input,table.workers select{padding:7px 8px;font-size:15.5px;}
+  table.workers td.cost{white-space:nowrap;font-weight:600;color:var(--pea-dark);padding-top:9px;}
+  table.workers td.del{text-align:center;}
+  .del-btn{
+    border:none;background:none;color:#b9506a;cursor:pointer;font-size:19px;line-height:1;padding:6px;
+  }
+  .add-btn{
+    margin-top:8px;
+    background:var(--pea-light);color:var(--pea-dark);
+    border:1px solid var(--line);border-radius:8px;
+    padding:9px 16px;font-size:15.5px;cursor:pointer;font-weight:600;
+  }
+  .add-btn:hover{background:#e6d9f7;}
+
+  .total-bar{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-top:10px;padding:10px 12px;
+    background:var(--pea-dark);color:#fff;border-radius:10px;
+  }
+  .total-bar .amt{font-size:24px;font-weight:700;color:var(--accent);}
+  .total-bar .txt{font-size:14.5px;color:#e4d9f5;margin-top:2px;}
+
+  .preview-outer{position:sticky;top:16px;}
+  .memo{
+    background:#fff;border:1px solid var(--line);border-radius:2px;
+    padding:34px 38px;font-size:16px;line-height:1.7;color:#1c1826;
+    min-height:600px;
+  }
+  .memo .memo-head{text-align:center;margin-bottom:4px;}
+  .memo .memo-head .badge{
+    display:inline-block;background:var(--pea);color:#fff;font-size:13px;
+    padding:2px 10px;border-radius:20px;margin-bottom:6px;letter-spacing:.5px;
+  }
+  .memo h3{text-align:center;margin:2px 0 14px;font-size:19px;letter-spacing:.5px;}
+  .memo .kv{display:flex;justify-content:space-between;font-size:15.5px;margin-bottom:2px;}
+  .memo p{margin:6px 0;}
+  .memo table.memo-tbl{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px;}
+  .memo table.memo-tbl th,.memo table.memo-tbl td{border:1px solid #444;padding:4px 5px;text-align:center;}
+  .memo table.memo-tbl th{background:#eee6f7;font-weight:600;}
+  .memo table.memo-tbl td.name{text-align:left;}
+  .memo .sig{margin-top:34px;display:flex;justify-content:space-around;text-align:center;font-size:15px;}
+  .memo .sig div{width:44%;}
+  .memo .line{border-bottom:1px dotted #888;height:26px;margin-bottom:6px;}
+
+  .btnbar{display:flex;gap:10px;margin:14px 0 4px;}
+  .pbtn{
+    border:none;border-radius:9px;padding:11px 20px;font-size:16px;font-weight:600;cursor:pointer;
+  }
+  .pbtn.primary{background:var(--pea);color:#fff;}
+  .pbtn.primary:hover{background:var(--pea-dark);}
+  .pbtn.ghost{background:#fff;color:var(--pea-dark);border:1px solid var(--pea);}
+  .pbtn.ghost:hover{background:var(--pea-light);}
+
+  .hint{font-size:13.5px;color:var(--muted);margin-top:4px;}
+
+  @media print{
+    header.top,.card,.btnbar,.no-print{display:none !important;}
+    body{background:#fff;}
+    .wrap{padding:0;max-width:none;}
+    .layout{display:block;}
+    .preview-outer{position:static;}
+    .memo{border:none;padding:0;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="bolt">⚡</div>
+  <div>
+    <h1>โปรแกรมทำเอกสารขอล่วงเวลา</h1>
+    <p>ผมต.กฟส.ฝาง — กรอกครั้งเดียว ระบบคำนวณค่าแรงและร่างบันทึกข้อความให้อัตโนมัติ</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="layout">
+
+    <!-- ================= LEFT: FORM ================= -->
+    <div>
+
+      <div class="card">
+        <h2><span class="n">1</span>ข้อมูลงาน</h2>
+        <div class="field">
+          <label>ชื่องาน</label>
+          <input id="jobName" placeholder="เช่น สับเปลี่ยนหม้อแปลงชำรุด ดอยป่าคา">
+        </div>
+        <div class="grid3">
+          <div class="field">
+            <label>วันที่ปฏิบัติงาน</label>
+            <input type="date" id="workDate">
+          </div>
+          <div class="field">
+            <label>เวลาเริ่ม</label>
+            <input type="time" id="timeStart" value="19:30">
+          </div>
+          <div class="field">
+            <label>เวลาเสร็จ</label>
+            <input type="time" id="timeEnd" value="22:30">
+          </div>
+        </div>
+        <div class="hint">วัน (จันทร์–อาทิตย์) จะคำนวณจากวันที่ปฏิบัติงานให้อัตโนมัติ</div>
+
+        <div style="margin-top:14px;">
+          <label>ปริมาณงาน (สูงสุด 4 รายการ)</label>
+          <div id="workItems"></div>
+          <button class="add-btn no-print" onclick="addWorkItem()">+ เพิ่มรายการงาน</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="n">2</span>อ้างอิงงบประมาณ</h2>
+        <div class="grid2">
+          <div class="field"><label>รหัสโครงข่าย (WBS)</label><input id="wbsCode"></div>
+          <div class="field"><label>กิจกรรม</label><input id="activity"></div>
+          <div class="field"><label>เลขที่ใบสั่งซ่อม</label><input id="repairNo"></div>
+          <div class="field"><label>งบประมาณ / ยกมา (บาท)</label><input type="number" step="0.01" id="budgetCarry"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="n">3</span>อัตราค่าแรงต่อวัน (บาท)</h2>
+        <div class="grid3" id="rateEditGrid" style="grid-template-columns:1fr 1fr 1fr 1fr;"></div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:10px;">
+          <button class="add-btn no-print" onclick="resetRates()">↺ คืนค่าเริ่มต้น</button>
+          <span class="hint" style="margin:0;">แก้ไขที่นี่แล้วยอดค่าใช้จ่ายของคนงานทุกคนด้านล่างจะคำนวณใหม่ให้ทันที</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="n">4</span>รายชื่อคนงาน &amp; คำนวณค่าใช้จ่าย</h2>
+        <table class="workers">
+          <thead>
+            <tr>
+              <th style="width:19%">ชื่อ-สกุล</th>
+              <th style="width:13%">ประเภท</th>
+              <th style="width:8%">ค่าแรง/วัน</th>
+              <th style="width:8%">จำนวนวัน</th>
+              <th style="width:9%">กี่เท่า</th>
+              <th style="width:9%">ชั่วโมง</th>
+              <th style="width:14%">ค่าใช้จ่าย</th>
+              <th style="width:4%"></th>
+            </tr>
+          </thead>
+          <tbody id="workerRows"></tbody>
+        </table>
+        <button class="add-btn no-print" onclick="addWorker()">+ เพิ่มคนงาน</button>
+
+        <div class="total-bar">
+          <div>
+            <div>รวมค่าใช้จ่ายล่วงเวลา</div>
+            <div class="txt" id="bahtText">-</div>
+          </div>
+          <div class="amt" id="totalAmt">0.00 บาท</div>
+        </div>
+        <div class="hint">สูตร: (ค่าแรงต่อวัน ÷ 8) × ชั่วโมง × จำนวนเท่า × จำนวนวัน — ประเภท 1 = 483 / 2 = 551 / 3 = 631 / พขร. = 99.29 บาทต่อวัน</div>
+      </div>
+
+      <div class="card">
+        <h2><span class="n">5</span>ผู้ควบคุมงานและผู้อนุมัติ</h2>
+        <div class="grid2">
+          <div class="field"><label>ผู้ควบคุมงาน</label>
+            <input id="supName" list="supNames" placeholder="นาย...">
+            <datalist id="supNames">
+              <option value="นายธนพล มณีกุล"></option>
+              <option value="นายกิตติพัทธ์ เรือนชัย"></option>
+              <option value="นายประสาน เป๋าคำ"></option>
+            </datalist>
+          </div>
+          <div class="field"><label>ระดับ</label>
+            <input id="supLevel" list="supLevels" placeholder="พชง.6 ผมต.กฟส.ฝาง">
+            <datalist id="supLevels">
+              <option value="พชง.6 ผมต.กฟส.ฝาง"></option>
+              <option value="พชง.5 ผมต.กฟส.ฝาง"></option>
+              <option value="พชง.4 ผมต.กฟส.ฝาง"></option>
+            </datalist>
+          </div>
+          <div class="field"><label>ผู้อนุมัติ</label>
+            <input id="appName" list="appNames" placeholder="นาย...">
+            <datalist id="appNames">
+              <option value="นายพงค์ศักดิ์ เจ้ยทองศรี"></option>
+              <option value="นายอภินันท์ ชุ่มบัวทอง"></option>
+              <option value="นายกิตติพัทธ์ เรือนชัย"></option>
+            </datalist>
+          </div>
+          <div class="field"><label>ระดับ</label>
+            <input id="appLevel" list="appLevels" placeholder="หผ.มต.กฟส.ฝาง">
+            <datalist id="appLevels">
+              <option value="หผ.มต.กฟส.ฝาง"></option>
+              <option value="พชง.7 รักษาการแทน หผ.มต.กฟส.ฝาง"></option>
+              <option value="พชง.6 ปฏิบัติงานแทน หผ.มต.กฟส.ฝาง"></option>
+              <option value="ชผ.รักษาการแทน หผ.มต.กฟส.ฝาง"></option>
+            </datalist>
+          </div>
+        </div>
+      </div>
+
+      <div class="btnbar no-print">
+        <button class="pbtn primary" onclick="window.print()">🖨️ พิมพ์ / บันทึกเป็น PDF</button>
+        <button class="pbtn primary" style="background:var(--good);" onclick="exportExcel()">📊 ส่งออกบันทึกข้อความเป็น Excel</button>
+        <button class="pbtn ghost" onclick="resetForm()">ล้างข้อมูลทั้งหมด</button>
+      </div>
+    </div>
+
+    <!-- ================= RIGHT: PREVIEW ================= -->
+    <div class="preview-outer">
+      <div class="memo" id="memo">
+        <div class="memo-head">
+          <span class="badge">บันทึกข้อความ</span>
+          <div class="kv"><span>ส่วนราชการ&nbsp; ผมต.กฟส.ฝาง</span><span id="mDocDate">วันที่ -</span></div>
+          <div class="kv"><span>ที่&nbsp; -</span><span></span></div>
+        </div>
+        <p><b>เรื่อง</b>&nbsp; ขออนุมัติให้คนงานรายวัน บริษัทฯ ปฏิบัติงานล่วงเวลา</p>
+        <p><b>เรียน</b>&nbsp; ผจก.กฟส.ฝาง ผ่าน ชจก.(ท) กฟส.ฝาง</p>
+        <p id="mIntro">ผมต.กฟส.ฝาง มีความประสงค์ให้คนงาน ปฏิบัติงานล่วงเวลา ... เพื่อให้งานแล้วเสร็จตามกำหนด โดยมีปริมาณงานดังนี้</p>
+        <ol id="mItems" style="margin:4px 0 4px 18px;padding:0;"></ol>
+        <p style="margin-top:10px;">ปฏิบัติงานสำหรับงานซ่อมบำรุงรักษา เลขที่ใบสั่งซ่อม <span id="mRepairNo">-</span>
+          &nbsp;| รหัสโครงข่าย <span id="mWbs">-</span> กิจกรรม <span id="mAct">-</span></p>
+
+        <p style="margin-top:14px;"><b>รายละเอียดค่าใช้จ่ายการปฏิบัติงานล่วงเวลา คนงานบริษัท เพาเวอร์เทคโนโลยี ดีเวลลอปเมนท์ จำกัด</b></p>
+        <table class="memo-tbl">
+          <thead>
+            <tr>
+              <th>ที่</th><th>ชื่อ-สกุล</th><th>ประเภท</th><th>ค่าแรง<br>รายวัน</th>
+              <th>ว.ด.ป.</th><th>จำนวน<br>(วัน)</th><th colspan="2">เวลาปฏิบัติงาน</th>
+              <th>เท่า</th><th>รวม<br>ช.ม.</th><th>ค่าใช้จ่าย<br>(บาท)</th>
+            </tr>
+          </thead>
+          <tbody id="mWorkerTbl"></tbody>
+          <tfoot>
+            <tr><td colspan="10" style="text-align:right;font-weight:600;">รวมค่าใช้จ่าย</td><td id="mTotal" style="font-weight:700;">0.00</td></tr>
+          </tfoot>
+        </table>
+
+        <p id="mCostSentence">ค่าใช้จ่ายในการปฏิบัติงานล่วงเวลาเป็นเงิน 0.00 บาท ( - ) โดยให้</p>
+        <p id="mSup">- เป็นผู้ควบคุมการปฏิบัติงาน</p>
+        <p>จึงเรียนเพื่อโปรดพิจารณาอนุมัติ</p>
+
+        <div class="sig">
+          <div>
+            <div class="line"></div>
+            <div id="mSupSign">( - )</div>
+            <div id="mSupLevelSign">-</div>
+          </div>
+          <div>
+            <div class="line"></div>
+            <div id="mAppSign">( - )</div>
+            <div id="mAppLevelSign">-</div>
+          </div>
+        </div>
+        <p style="margin-top:26px;font-size:13px;color:#666;">ผมต.กฟส.ฝาง&nbsp; 14448</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const DEFAULT_RATE = {"1":483, "2":551, "3":631, "พขร.":99.29};
+let TYPE_RATE = {...DEFAULT_RATE};
+const RATE_LABEL = {"1":"ประเภท 1", "2":"ประเภท 2", "3":"ประเภท 3", "พขร.":"พขร. (พนักงานขับรถ)"};
+const THAI_DAYS = ["อาทิตย์","จันทร์","อังคาร","พุธ","พฤหัสบดี","ศุกร์","เสาร์"];
+const THAI_MONTHS_ABBR = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+const WORKER_NAMES = ["นายพิมาน สูนปัน","นายชาญกิจ กิตติวรรณ์","นายจักรพล มลเทียน","นายณัฐวุฒิ สิงห์ใจ","นายธนากร ทิพย์แก้ว","นายทวีศักดิ์ เทียมพล","นายนพดล พรหมมินทร์"];
+
+let workItems = [{text:"", qty:""}];
+let workers = [{name:"", type:"1", days:1, mult:"1.5", hours:""}];
+
+/* ---------- datalist for worker names ---------- */
+(function initNameList(){
+  const dl = document.createElement('datalist');
+  dl.id = 'workerNameList';
+  WORKER_NAMES.forEach(n=>{
+    const o = document.createElement('option'); o.value = n; dl.appendChild(o);
+  });
+  document.body.appendChild(dl);
+})();
+
+/* ---------- wage rate editor ---------- */
+function renderRateEditor(){
+  const grid = document.getElementById('rateEditGrid');
+  grid.innerHTML = '';
+  Object.keys(DEFAULT_RATE).forEach(type=>{
+    const div = document.createElement('div');
+    div.className = 'field';
+    div.innerHTML = `
+      <label>${RATE_LABEL[type]}</label>
+      <input type="number" min="0" step="0.01" value="${TYPE_RATE[type]}"
+        oninput="TYPE_RATE['${type}']=this.value===''?0:parseFloat(this.value); renderWorkers(); renderPreview();">
+    `;
+    grid.appendChild(div);
+  });
+}
+function resetRates(){
+  TYPE_RATE = {...DEFAULT_RATE};
+  renderRateEditor();
+  renderWorkers();
+  renderPreview();
+}
+
+/* ---------- work items ---------- */
+function renderWorkItems(){
+  const c = document.getElementById('workItems');
+  c.innerHTML = '';
+  workItems.forEach((it, i)=>{
+    const div = document.createElement('div');
+    div.className = 'row-items';
+    div.innerHTML = `
+      <div class="grid2">
+        <div><label>รายการที่ ${i+1}</label>
+          <input value="${escapeHtml(it.text)}" placeholder="เช่น รื้อถอนหม้อแปลง TR28-004097"
+            oninput="workItems[${i}].text=this.value; renderPreview();"></div>
+        <div><label>จำนวน</label>
+          <input value="${escapeHtml(it.qty)}" placeholder="เช่น จำนวน 1 เครื่อง"
+            oninput="workItems[${i}].qty=this.value; renderPreview();"></div>
+      </div>
+      ${workItems.length>1 ? `<button class="del-btn no-print" onclick="workItems.splice(${i},1); renderWorkItems(); renderPreview();">✕ ลบรายการนี้</button>` : ''}
+    `;
+    c.appendChild(div);
+  });
+}
+function addWorkItem(){
+  if(workItems.length>=4) return;
+  workItems.push({text:"",qty:""});
+  renderWorkItems();
+}
+
+/* ---------- workers ---------- */
+function renderWorkers(){
+  const tb = document.getElementById('workerRows');
+  tb.innerHTML = '';
+  workers.forEach((w,i)=>{
+    const rate = TYPE_RATE[w.type] ?? 0;
+    const hours = w.hours === "" ? 0 : parseFloat(w.hours);
+    const days = w.days === "" ? 0 : parseFloat(w.days);
+    const mult = w.mult === "" ? 0 : parseFloat(w.mult);
+    const cost = (rate/8) * hours * mult * days;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input list="workerNameList" value="${escapeHtml(w.name)}" placeholder="ชื่อ-สกุล"
+            oninput="workers[${i}].name=this.value; renderPreview();"></td>
+      <td>
+        <select onchange="workers[${i}].type=this.value; renderWorkers(); renderPreview();">
+          ${["1","2","3","พขร."].map(t=>`<option value="${t}" ${w.type===t?'selected':''}>${RATE_LABEL[t]}</option>`).join('')}
+        </select>
+      </td>
+      <td style="padding-top:9px;color:#6b6178;">${rate.toFixed(2)}</td>
+      <td><input type="number" min="0" step="1" value="${w.days}"
+            oninput="workers[${i}].days=this.value; renderWorkers(); renderPreview();"></td>
+      <td>
+        <select onchange="workers[${i}].mult=this.value; renderWorkers(); renderPreview();">
+          ${["1","1.5","2","3"].map(m=>`<option value="${m}" ${w.mult===m?'selected':''}>${m}</option>`).join('')}
+        </select>
+      </td>
+      <td><input type="number" min="0" step="0.5" value="${w.hours}" placeholder="ชม."
+            oninput="workers[${i}].hours=this.value; renderWorkers(); renderPreview();"></td>
+      <td class="cost">${isFinite(cost)?cost.toFixed(2):'0.00'}</td>
+      <td class="del">${workers.length>1?`<button class="del-btn no-print" onclick="workers.splice(${i},1); renderWorkers(); renderPreview();">✕</button>`:''}</td>
+    `;
+    tb.appendChild(tr);
+  });
+  updateTotal();
+}
+function addWorker(){
+  if(workers.length>=6) return;
+  workers.push({name:"", type:"1", days:1, mult:"1.5", hours:""});
+  renderWorkers();
+}
+
+function workerCost(w){
+  const rate = TYPE_RATE[w.type] ?? 0;
+  const hours = w.hours === "" ? 0 : parseFloat(w.hours);
+  const days = w.days === "" ? 0 : parseFloat(w.days);
+  const mult = w.mult === "" ? 0 : parseFloat(w.mult);
+  const c = (rate/8) * hours * mult * days;
+  return isFinite(c) ? Math.round(c*100)/100 : 0;
+}
+
+function updateTotal(){
+  const total = workers.reduce((s,w)=>s+workerCost(w),0);
+  document.getElementById('totalAmt').textContent = total.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' บาท';
+  document.getElementById('bahtText').textContent = bahtText(total);
+}
+
+/* ---------- helpers ---------- */
+function escapeHtml(s){
+  return (s||"").replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function autoHours(){
+  const s = document.getElementById('timeStart').value;
+  const e = document.getElementById('timeEnd').value;
+  if(!s||!e) return "";
+  const [sh,sm]=s.split(':').map(Number);
+  const [eh,em]=e.split(':').map(Number);
+  let diff = (eh*60+em) - (sh*60+sm);
+  if(diff<0) diff += 24*60;
+  return Math.round((diff/60)*100)/100;
+}
+function thaiDateFull(dateStr){
+  if(!dateStr) return "-";
+  const d = new Date(dateStr+"T00:00:00");
+  const day = d.getDate();
+  const mon = THAI_MONTHS_ABBR[d.getMonth()];
+  const y = d.getFullYear()+543;
+  return `${day} ${mon} ${y}`;
+}
+function thaiDayName(dateStr){
+  if(!dateStr) return "-";
+  const d = new Date(dateStr+"T00:00:00");
+  return THAI_DAYS[d.getDay()];
+}
+function thaiDocDate(){
+  const d = new Date();
+  return `${d.getDate()} ${THAI_MONTHS_ABBR[d.getMonth()]} ${d.getFullYear()+543}`;
+}
+
+/* Thai baht text conversion */
+function bahtText(num){
+  num = Math.round((num||0)*100)/100;
+  if(num===0) return "ศูนย์บาทถ้วน";
+  const neg = num<0; num=Math.abs(num);
+  const [intPartStr, decPartStr] = num.toFixed(2).split('.');
+  const digitTh = ["ศูนย์","หนึ่ง","สอง","สาม","สี่","ห้า","หก","เจ็ด","แปด","เก้า"];
+  const posTh = ["","สิบ","ร้อย","พัน","หมื่น","แสน","ล้าน"];
+  function convertGroup(numStr){
+    let out = "";
+    const len = numStr.length;
+    for(let i=0;i<len;i++){
+      const d = parseInt(numStr[i]);
+      const posFromRight = len-i-1;
+      if(d===0) continue;
+      if(posFromRight===0 && d===1 && len>1){ out += "เอ็ด"; }
+      else if(posFromRight===1 && d===1){ out += "สิบ"; }
+      else if(posFromRight===1 && d===2){ out += "ยี่สิบ"; }
+      else { out += digitTh[d] + posTh[posFromRight]; }
+    }
+    return out;
+  }
+  function convertInt(s){
+    s = s.replace(/^0+(?=\d)/,'');
+    if(s==="0") return "ศูนย์";
+    let out = "";
+    while(s.length>6){
+      const chunk = s.slice(0, s.length-6);
+      out += convertGroup(chunk) + "ล้าน";
+      s = s.slice(s.length-6);
+    }
+    out += convertGroup(s);
+    return out;
+  }
+  let result = convertInt(intPartStr) + "บาท";
+  if(decPartStr==="00"){
+    result += "ถ้วน";
+  } else {
+    result += convertGroup(decPartStr.replace(/^0+(?=\d)/,'')) + "สตางค์";
+  }
+  return (neg?"ลบ":"") + result;
+}
+
+/* ---------- main preview render ---------- */
+function renderPreview(){
+  const jobName = document.getElementById('jobName').value || "-";
+  const workDate = document.getElementById('workDate').value;
+  const ts = document.getElementById('timeStart').value || "-";
+  const te = document.getElementById('timeEnd').value || "-";
+  const dayName = thaiDayName(workDate);
+  const dateFull = thaiDateFull(workDate);
+  const wbs = document.getElementById('wbsCode').value || "-";
+  const act = document.getElementById('activity').value || "-";
+  const repairNo = document.getElementById('repairNo').value || "-";
+  const supName = document.getElementById('supName').value || "-";
+  const supLevel = document.getElementById('supLevel').value || "-";
+  const appName = document.getElementById('appName').value || "-";
+  const appLevel = document.getElementById('appLevel').value || "-";
+
+  document.getElementById('mDocDate').textContent = "วันที่ " + thaiDocDate();
+  document.getElementById('mIntro').textContent =
+    `ผมต.กฟส.ฝาง มีความประสงค์ให้คนงาน ปฏิบัติงานล่วงเวลา ${jobName} เพื่อให้งานแล้วเสร็จตามกำหนดในวัน${dayName} ที่ ${dateFull} โดยมีปริมาณงานดังนี้`;
+
+  const ol = document.getElementById('mItems');
+  ol.innerHTML = '';
+  workItems.forEach(it=>{
+    if(!it.text && !it.qty) return;
+    const li = document.createElement('li');
+    li.textContent = `${it.text}${it.qty ? ' — '+it.qty : ''}`;
+    ol.appendChild(li);
+  });
+  if(!ol.children.length){ ol.innerHTML = '<li style="color:#999;">— ยังไม่ได้ระบุปริมาณงาน —</li>'; }
+
+  document.getElementById('mRepairNo').textContent = repairNo;
+  document.getElementById('mWbs').textContent = wbs;
+  document.getElementById('mAct').textContent = act;
+
+  const tb = document.getElementById('mWorkerTbl');
+  tb.innerHTML = '';
+  let total = 0;
+  const hoursCalc = autoHours();
+  workers.forEach((w,i)=>{
+    if(!w.name) return;
+    const rate = TYPE_RATE[w.type] ?? 0;
+    const hrs = w.hours!=="" ? parseFloat(w.hours) : (hoursCalc||0);
+    const cost = workerCost({...w, hours: w.hours!=="" ? w.hours : hoursCalc});
+    total += cost;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td class="name">${escapeHtml(w.name)}</td>
+      <td>${RATE_LABEL[w.type]}</td>
+      <td>${rate.toFixed(2)}</td>
+      <td>${dateFull}</td>
+      <td>${w.days||0}</td>
+      <td>${ts}</td>
+      <td>${te}</td>
+      <td>${w.mult}</td>
+      <td>${hrs||0}</td>
+      <td>${cost.toFixed(2)}</td>
+    `;
+    tb.appendChild(tr);
+  });
+  if(!tb.children.length){
+    tb.innerHTML = '<tr><td colspan="11" style="color:#999;">— ยังไม่ได้ระบุคนงาน —</td></tr>';
+  }
+  document.getElementById('mTotal').textContent = total.toFixed(2);
+  document.getElementById('mCostSentence').textContent =
+    `ค่าใช้จ่ายในการปฏิบัติงานล่วงเวลาเป็นเงิน ${total.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2})} บาท ( ${bahtText(total)} ) โดยให้`;
+  document.getElementById('mSup').textContent = `${supName} ${supLevel} เป็นผู้ควบคุมการปฏิบัติงาน`;
+  document.getElementById('mSupSign').textContent = `( ${supName} )`;
+  document.getElementById('mSupLevelSign').textContent = supLevel;
+  document.getElementById('mAppSign').textContent = `( ${appName} )`;
+  document.getElementById('mAppLevelSign').textContent = appLevel;
+
+  updateTotal();
+}
+
+/* ---------- events ---------- */
+['jobName','wbsCode','activity','repairNo','budgetCarry','supName','supLevel','appName','appLevel']
+  .forEach(id=>document.getElementById(id).addEventListener('input', renderPreview));
+document.getElementById('workDate').addEventListener('change', ()=>{renderWorkers(); renderPreview();});
+document.getElementById('timeStart').addEventListener('change', ()=>{renderWorkers(); renderPreview();});
+document.getElementById('timeEnd').addEventListener('change', ()=>{renderWorkers(); renderPreview();});
+
+function resetForm(){
+  if(!confirm('ล้างข้อมูลทั้งหมดในฟอร์มหรือไม่? (อัตราค่าแรงจะไม่ถูกล้าง)')) return;
+  document.querySelectorAll('.card input, .card select').forEach(el=>{
+    if(el.type==='time') return;
+    if(el.closest('#rateEditGrid')) return;
+    el.value='';
+  });
+  document.getElementById('timeStart').value='19:30';
+  document.getElementById('timeEnd').value='22:30';
+  workItems = [{text:"",qty:""}];
+  workers = [{name:"", type:"1", days:1, mult:"1.5", hours:""}];
+  renderWorkItems();
+  renderWorkers();
+  renderPreview();
+}
+
+/* ---------- export to excel ---------- */
+function exportExcel(){
+  if(typeof XLSX === 'undefined'){
+    alert('ไม่สามารถโหลดไลบรารีสำหรับสร้างไฟล์ Excel ได้ (ต้องเชื่อมต่ออินเทอร์เน็ต) กรุณาลองใหม่อีกครั้ง');
+    return;
+  }
+  const jobName = document.getElementById('jobName').value || "";
+  const workDate = document.getElementById('workDate').value;
+  const ts = document.getElementById('timeStart').value || "";
+  const te = document.getElementById('timeEnd').value || "";
+  const dayName = thaiDayName(workDate);
+  const dateFull = thaiDateFull(workDate);
+  const wbs = document.getElementById('wbsCode').value || "";
+  const act = document.getElementById('activity').value || "";
+  const repairNo = document.getElementById('repairNo').value || "";
+  const supName = document.getElementById('supName').value || "";
+  const supLevel = document.getElementById('supLevel').value || "";
+  const appName = document.getElementById('appName').value || "";
+  const appLevel = document.getElementById('appLevel').value || "";
+  const hoursCalc = autoHours();
+
+  const filledItems = workItems.filter(it=>it.text||it.qty);
+  const filledWorkers = workers.filter(w=>w.name);
+  let total = 0;
+
+  /* ---- memo (บันทึกข้อความ) ---- */
+  const introText = `ผมต.กฟส.ฝาง มีความประสงค์ให้คนงาน ปฏิบัติงานล่วงเวลา ${jobName} เพื่อให้งานแล้วเสร็จตามกำหนดในวัน${dayName} ที่ ${dateFull} โดยมีปริมาณงานดังนี้`;
+
+  const aoa = [
+    ["บันทึกข้อความ"],
+    ["ส่วนราชการ", "ผมต.กฟส.ฝาง", "", "วันที่", thaiDocDate()],
+    [],
+    ["เรื่อง", "ขออนุมัติให้คนงานรายวัน บริษัทฯ ปฏิบัติงานล่วงเวลา"],
+    ["เรียน", "ผจก.กฟส.ฝาง ผ่าน ชจก.(ท) กฟส.ฝาง"],
+    [],
+    [introText],
+    [],
+  ];
+  filledItems.forEach((it,i)=> aoa.push([`${i+1}. ${it.text}${it.qty ? ' — '+it.qty : ''}`]));
+  aoa.push([]);
+  aoa.push([`ปฏิบัติงานสำหรับงานซ่อมบำรุงรักษา เลขที่ใบสั่งซ่อม ${repairNo}   |   รหัสโครงข่าย ${wbs}   กิจกรรม ${act}`]);
+  aoa.push([]);
+  aoa.push(["รายละเอียดค่าใช้จ่ายการปฏิบัติงานล่วงเวลา คนงานบริษัท เพาเวอร์เทคโนโลยี ดีเวลลอปเมนท์ จำกัด"]);
+  aoa.push(["ที่","ชื่อ-สกุล","ประเภท","ค่าแรงรายวัน","ว.ด.ป.","จำนวน(วัน)","จาก","ถึง","เท่า","รวม ช.ม.","ค่าใช้จ่าย(บาท)"]);
+  filledWorkers.forEach((w,i)=>{
+    const rate = TYPE_RATE[w.type] ?? 0;
+    const hrs = w.hours!=="" ? parseFloat(w.hours) : (hoursCalc||0);
+    const cost = workerCost({...w, hours: w.hours!=="" ? w.hours : hoursCalc});
+    total += cost;
+    aoa.push([i+1, w.name, RATE_LABEL[w.type], rate, dateFull, parseFloat(w.days)||0, ts, te, parseFloat(w.mult)||0, hrs, cost]);
+  });
+  aoa.push(["","","","","","","","","","รวม", Math.round(total*100)/100]);
+  aoa.push([]);
+  aoa.push([`ค่าใช้จ่ายในการปฏิบัติงานล่วงเวลาเป็นเงิน ${total.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2})} บาท ( ${bahtText(total)} ) โดยให้`]);
+  aoa.push([`${supName} ${supLevel} เป็นผู้ควบคุมการปฏิบัติงาน`]);
+  aoa.push(["จึงเรียนเพื่อโปรดพิจารณาอนุมัติ"]);
+  aoa.push([]);
+  aoa.push(["", `( ${supName} )`, "", "", `( ${appName} )`]);
+  aoa.push(["", supLevel, "", "", appLevel]);
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:6},{wch:24},{wch:12},{wch:12},{wch:14},{wch:11},{wch:8},{wch:8},{wch:8},{wch:9},{wch:13}];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "บันทึกข้อความ");
+
+  const safeName = (jobName || "เอกสารล่วงเวลา").replace(/[\\/:*?"<>|]/g,'').slice(0,40);
+  const fileDate = workDate || new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `บันทึกข้อความ_${safeName}_${fileDate}.xlsx`);
+}
+
+/* init */
+(function init(){
+  const today = new Date();
+  document.getElementById('workDate').value = today.toISOString().slice(0,10);
+  renderRateEditor();
+  renderWorkItems();
+  renderWorkers();
+  renderPreview();
+})();
+</script>
+</body>
+</html>

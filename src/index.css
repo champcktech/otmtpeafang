@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --pea-primary: #5b2a86;
+    --pea-dark: #3d1b5c;
+    --pea-tint: #f4effa;
+    --pea-gold: #e8a33d;
+  }
+
+  body {
+    font-family: 'Sarabun', 'Noto Sans Thai', system-ui, -apple-system, sans-serif;
+    background-color: #f7f5fa;
+    color: #1f1a29;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: 'Prompt', 'Sarabun', system-ui, sans-serif;
+  }
+
+  .font-mono-num {
+    font-family: 'IBM Plex Mono', 'Sarabun', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 14mm 16mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only-sheet {
+    position: static !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+}

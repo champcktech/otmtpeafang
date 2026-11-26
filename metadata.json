@@ -1,0 +1,6 @@
+{
+  "name": "โปรแกรมทำเอกสารขอล่วงเวลา — ผมต.กฟส.ฝาง",
+  "description": "โปรแกรมคำนวณค่าแรงล่วงเวลาและร่างบันทึกข้อความขออนุมัติปฏิบัติงานล่วงเวลาอัตโนมัติ พร้อมพิมพ์ PDF และส่งออกไฟล์ Excel สำหรับ ผมต.กฟส.ฝาง",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
